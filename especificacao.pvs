@@ -1,34 +1,12 @@
-%------------------------------------------------------------------------------
-%  Proof of the infinity of prime numbers using a topological argument 
-%  due to Hillel Fürstenberg
-%  "On the Infinitude of Primes". Amer. Math, Monthly. 62(5),1955
-%
-%  Formalization based on the reference "Proofs from the Book", 
-%  Martin Aigner Günter and M. Ziegler
-%
-%  Authors: Bruno Berto de Oliveira Ribeiro, Universidade de Brasília
-%           Marcos Rony Silva Brandão, Universidade Federal de Goiás
-%           Thaynara Arielly de Lima, Universidade Federal de Goiás
-%           Mauricio Ayala-Rincón, Universidade de Brasília
-%           
-%
-%    2024/05/14
-%------------------------------------------------------------------------------
-
-
 inf_prime_topology: THEORY
 
 BEGIN
-% The PVS nasalib theory topology_prelim[int] is imported
-% to have the basic notion of a topology (over the set int).
-% Elements of this theory are required to prove that the
-% "open" sets given by the integer predicate "open_N_Z?"
-% provided a topology over int.
+
 IMPORTING topology@topology_prelim[int]
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Seção 1
-a,x,y: VAR int
-b,c: VAR posint
+a, x, y: VAR int
+b, c: VAR posint
 O: VAR set[int]
 A: VAR setofsets[int]
 W: VAR finite_set[set[int]]
@@ -36,47 +14,39 @@ W: VAR finite_set[set[int]]
 N(a)(b): set[int] = {x : int | EXISTS (n:int): x = a + n * b}
 
 open_N_Z?(O): bool = O = emptyset OR 
-  FORALL (a:(O)): EXISTS (b): (subset?(N(a)(b),O))
+  FORALL (a:(O)): EXISTS (b): (subset?(N(a)(b), O))
 
 union_open_is_open: LEMMA 
- FORALL (O,S: (open_N_Z?)): open_N_Z?(union(O,S))
+ FORALL (O, S: (open_N_Z?)): open_N_Z?(union(O, S))
 
 any_union_open_is_open: LEMMA
- (FORALL (O:(A)): open_N_Z?(O)) IMPLIES open_N_Z?(Union(A))
+ (FORALL (O: (A)): open_N_Z?(O)) IMPLIES open_N_Z?(Union(A))
  
 inter_open_is_open: LEMMA 
-  FORALL (O,S: (open_N_Z?)):  open_N_Z?(intersection(O,S))
+  FORALL (O, S: (open_N_Z?)):  open_N_Z?(intersection(O, S))
 
 fin_inter_open_is_open: LEMMA
-   (FORALL (O:(W)): open_N_Z?(O)) IMPLIES open_N_Z?(Intersection(W))
+   (FORALL (O: (W)): open_N_Z?(O)) IMPLIES open_N_Z?(Intersection(W))
 
-%—————————————————– QUESTÃO 1 ———————————————————
 int_is_open: CONJECTURE open_N_Z?(fullset[int])
 
 N_Z_topology: LEMMA topology?(fullset[(open_N_Z?)])
 
 Nab_is_infinite: LEMMA is_infinite(N(a)(b))
 
-Ni(a)(b): setofsets[int] =  {Ni: set[int] |  EXISTS (i: subrange(1,b-1)):  Ni= N(a+i)(b)}
+Ni(a)(b): setofsets[int] =  {Ni: set[int] |  EXISTS (i: subrange(1, b - 1)):  Ni = N(a + i)(b)}
 
 Nab_charac: LEMMA
   N(a)(b) = complement[int](Union(Ni(a)(b)))
 %%%%%%%%%%%%%%%%%%%%%%%%%%% Fim Seção 1
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% Seção 2
-% After proving that the predicate "open_N_Z?" gives a topology
-% over int, it is then possible to import the PVS nasalib theory
-% topology with both these parameters to apply properties of
-% the parameterized topology available in such theory.
-% The theory primes is imported to have the basic notions and
-% properties of primes. 
 IMPORTING topology@topology[int, fullset[(open_N_Z?)]],
           ints@primes
 
 open_is_infinite: LEMMA 
   FORALL (A: (open?)): nonempty?[int](A) IMPLIES is_infinite[int](A)
 
-%—————————————————– QUESTÃO 2 ———————————————————
 Nab_open: CONJECTURE open?(N(a)(b))
 
 Nab_closed: LEMMA closed?(N(a)(b))
@@ -86,22 +56,21 @@ N_prime: setofsets[int] = {Np: set[int] | EXISTS (p: (prime?)): Np = N(0)(p)}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% Seção 3
-%—————————————————– QUESTÃO 3 ———————————————————
-one_prime_decomposition_ind: CONJECTURE
-FORALL (n:nat) : n /= 1 IMPLIES EXISTS(p:(prime?)): divides(p,n)
+open_prime_decomposition_ind: CONJECTURE
+FORALL (n: nat) : n /= 1 IMPLIES EXISTS (p: (prime?)): divides(p, n)
 
 one_prime_decomposition: LEMMA
-abs(x) /=1  IMPLIES EXISTS(p:(prime?)): divides(p,x)
+abs(x) /= 1  IMPLIES EXISTS (p: (prime?)): divides(p, x)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% Fim Seção 3
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% Seção 4
 Union_Nprime: LEMMA  
-  complement[int]({x:int | x = 1 OR x = -1}) = Union(N_prime)
+  complement[int]({x: int | x = 1 OR x = -1}) = Union(N_prime)
 
 set_one_mone_is_finite: LEMMA
-  is_finite[int]({x:int | x = 1 OR x = -1})
+  is_finite[int]({x: int | x = 1 OR x = -1})
 
 prime_Nprime_bij: LEMMA
 EXISTS (f: [(fullset[(prime?)]) -> (N_prime)]): bijective?(f)
@@ -109,10 +78,7 @@ EXISTS (f: [(fullset[(prime?)]) -> (N_prime)]): bijective?(f)
 fin_prime_closed_Np: LEMMA
 is_finite(fullset[(prime?)]) IMPLIES closed?(Union(N_prime))  
 
-%—————————————————– QUESTÃO 4 ———————————————————
-prime_set_is_infinite : CONJECTURE
-  is_infinite(fullset[(prime?)])
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%% Fim Seção 4
+prime_set_is_infinite: CONJECTURE
+  is_infinite(fullset[(prime?)])  
 
 END inf_prime_topology
