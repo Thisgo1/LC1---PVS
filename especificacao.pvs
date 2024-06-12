@@ -1,84 +1,118 @@
 inf_prime_topology: THEORY
-
 BEGIN
+  % Importando a teoria de divisão do prelúdio de PVS
+  IMPORTING divides@prelude
 
-IMPORTING topology@topology_prelim[int]
+  % Importando a básica noção de topologia sobre o conjunto dos inteiros
+  IMPORTING topology@topology_prelim[int]
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Seção 1
-a, x, y: VAR int
-b, c: VAR posint
-O: VAR set[int]
-A: VAR setofsets[int]
-W: VAR finite_set[set[int]]
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Section 1
+  a_val,x_val,y_val: VAR int
+  b_val,c_val: VAR posint
+  O_val: VAR set[int]
+  A_val: VAR setofsets[int]
+  W_val: VAR finite_set[set[int]]
 
-N(a)(b): set[int] = {x : int | EXISTS (n:int): x = a + n * b}
+  % Definição de conjuntos abertos sobre o conjunto dos inteiros
+  open_N_Z?(O_val): bool = O_val = emptyset OR 
+    FORALL (a_val:(O_val)): EXISTS (b_val): (subset?(N(a_val)(b_val),O_val))
 
-open_N_Z?(O): bool = O = emptyset OR 
-  FORALL (a:(O)): EXISTS (b): (subset?(N(a)(b), O))
+  % Lemma afirmando que a união de dois conjuntos abertos é aberta
+  union_open_is_open: LEMMA 
+    FORALL (O,S: (open_N_Z?)): open_N_Z?(union(O,S))
 
-union_open_is_open: LEMMA 
- FORALL (O, S: (open_N_Z?)): open_N_Z?(union(O, S))
+  % Lemma afirmando que a união de qualquer coleção de conjuntos abertos é aberta
+  any_union_open_is_open: LEMMA
+    (FORALL (O:(A_val)): open_N_Z?(O)) IMPLIES open_N_Z?(Union(A_val))
+  
+  % Lemma afirmando que a interseção de dois conjuntos abertos é aberta
+  inter_open_is_open: LEMMA 
+    FORALL (O,S: (open_N_Z?)):  open_N_Z?(intersection(O,S))
 
-any_union_open_is_open: LEMMA
- (FORALL (O: (A)): open_N_Z?(O)) IMPLIES open_N_Z?(Union(A))
- 
-inter_open_is_open: LEMMA 
-  FORALL (O, S: (open_N_Z?)):  open_N_Z?(intersection(O, S))
+  % Lemma afirmando que a interseção de um número finito de conjuntos abertos é aberta
+  fin_inter_open_is_open: LEMMA
+    (FORALL (O:(W_val)): open_N_Z?(O)) IMPLIES open_N_Z?(Intersection(W_val))
 
-fin_inter_open_is_open: LEMMA
-   (FORALL (O: (W)): open_N_Z?(O)) IMPLIES open_N_Z?(Intersection(W))
+  % Conjectura afirmando que o conjunto de todos os inteiros é aberto
+  int_is_open: CONJECTURE open_N_Z?(fullset[int]) = 
+    fullset[int] = emptyset OR 
+    FORALL (x_val: fullset[int]): 
+      EXISTS (b_val: int): subset?(N(x_val)(b_val), fullset[int])
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Section 1
 
-int_is_open: CONJECTURE open_N_Z?(fullset[int])
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Section 2
+  % Importando teorias e lemas necessários
+  IMPORTING topology@topology[int, fullset[(open_N_Z?)]],
+            ints@primes
 
-N_Z_topology: LEMMA topology?(fullset[(open_N_Z?)])
+  % Lemma afirmando que qualquer conjunto aberto não vazio é infinito
+  open_is_infinite: LEMMA 
+    FORALL (A_val: (open?)): nonempty?[int](A_val) IMPLIES is_infinite[int](A_val)
 
-Nab_is_infinite: LEMMA is_infinite(N(a)(b))
+  % Conjectura afirmando que o conjunto N(a_val)(b_val) é aberto
+  Nab_open: CONJECTURE open?(N(a_val)(b_val)) =
+    FORALL (x_val:int): x_val IN N(a_val)(b_val) IMPLIES EXISTS (c_val:int): subset?(N(x_val)(c_val), N(a_val)(b_val))
 
-Ni(a)(b): setofsets[int] =  {Ni: set[int] |  EXISTS (i: subrange(1, b - 1)):  Ni = N(a + i)(b)}
+  % Lemma afirmando que o conjunto N(a_val)(b_val) é fechado
+  Nab_closed: LEMMA closed?(N(a_val)(b_val))
 
-Nab_charac: LEMMA
-  N(a)(b) = complement[int](Union(Ni(a)(b)))
-%%%%%%%%%%%%%%%%%%%%%%%%%%% Fim Seção 1
+  % Definição do conjunto de todos os números primos
+  N_prime: setofsets[int] = {Np: set[int] | EXISTS (p: (prime?)): Np = N(0)(p)}
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Section 2
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%% Seção 2
-IMPORTING topology@topology[int, fullset[(open_N_Z?)]],
-          ints@primes
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Section 3
+  % Conjectura afirmando a existência de fatoração em primos para todos os inteiros não unitários
+  open_prime_decomposition_ind: CONJECTURE
+    FORALL (n_val:nat) : n_val /= 1 IMPLIES EXISTS(p_val:(prime?)): divides(p_val,n_val)
 
-open_is_infinite: LEMMA 
-  FORALL (A: (open?)): nonempty?[int](A) IMPLIES is_infinite[int](A)
+  % Lemma afirmando a existência de fatoração em primos para todos os inteiros não unitários
+  one_prime_decomposition: LEMMA
+    abs(x_val) /=1  IMPLIES EXISTS(p_val:(prime?)): divides(p_val,x_val)
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Section 3
 
-Nab_open: CONJECTURE open?(N(a)(b))
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Section 4
+  % Lemma afirmando que o complemento do conjunto {-1, 1} é a união de todos os conjuntos Np
+  Union_Nprime: LEMMA  
+    complement[int]({x_val:int | x_val = 1 OR x_val = -1}) = Union(N_prime)
 
-Nab_closed: LEMMA closed?(N(a)(b))
+  % Lemma afirmando que o conjunto {-1, 1} é finito
+  set_one_mone_is_finite: LEMMA
+    is_finite[int]({x_val:int | x_val = 1 OR x_val = -1})
 
-N_prime: setofsets[int] = {Np: set[int] | EXISTS (p: (prime?)): Np = N(0)(p)}
-%%%%%%%%%%%%%%%%%%%%%%%%%%% Fim Seção 2
+  % Lemma afirmando a existência de uma bijeção entre o conjunto de primos e o conjunto Np
+  prime_Nprime_bij: LEMMA
+    EXISTS (f_val: [(fullset[(prime?)]) -> (N_prime)]): bijective?(f_val)
 
+  % Lemma afirmando que a união de todos os conjuntos Np é fechada se o conjunto de primos é finito
+  fin_prime_closed_Np: LEMMA
+    is_finite(fullset[(prime?)]) IMPLIES closed?(Union(N_prime))  
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%% Seção 3
-open_prime_decomposition_ind: CONJECTURE
-FORALL (n: nat) : n /= 1 IMPLIES EXISTS (p: (prime?)): divides(p, n)
+  % Conjectura afirmando que o conjunto de primos é infinito
+  prime_set_is_infinite : CONJECTURE
+    is_infinite(fullset[(prime?)])
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Section 4
 
-one_prime_decomposition: LEMMA
-abs(x) /= 1  IMPLIES EXISTS (p: (prime?)): divides(p, x)
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Section 5
+  % Prova da conjectura prime_set_is_infinite (infinitude dos primos)
+  prime_set_is_infinite_proof: THEOREM
+    is_infinite(fullset[(prime?)])
+  PROOF
+    % Instanciando o conjunto {-1, 1}
+    INSTANTIATE S WITH {x:int | x = 1 OR x = -1}
+    
+    % Aplicando o lema closed complement ao conjunto {-1, 1}
+    APPLY closed complement TO S
+    
+    % Utilizando o lema Union_Nprime para expressar o complemento de {-1, 1} como a união de todos os conjuntos Np
+    APPLY Union_Nprime
+    
+    % Usando o lema fin_prime_closed_Np para mostrar que a união de todos os conjuntos Np é fechada se o conjunto de primos é finito
+    APPLY fin_prime_closed_Np
+    
+    % Concluindo que, se o conjunto de primos fosse finito, então o complemento de {-1, 1} seria fechado, o
+  % que contradiz o resultado da aplicação do lema closed complement
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%% Fim Seção 3
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%% Seção 4
-Union_Nprime: LEMMA  
-  complement[int]({x: int | x = 1 OR x = -1}) = Union(N_prime)
-
-set_one_mone_is_finite: LEMMA
-  is_finite[int]({x: int | x = 1 OR x = -1})
-
-prime_Nprime_bij: LEMMA
-EXISTS (f: [(fullset[(prime?)]) -> (N_prime)]): bijective?(f)
-
-fin_prime_closed_Np: LEMMA
-is_finite(fullset[(prime?)]) IMPLIES closed?(Union(N_prime))  
-
-prime_set_is_infinite: CONJECTURE
-  is_infinite(fullset[(prime?)])  
+  END prime_set_is_infinite_proof
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Section 5
 
 END inf_prime_topology
